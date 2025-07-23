@@ -1,7 +1,10 @@
 package org.vaadin.addons.matthew.views.demo;
 
+import java.util.Random;
+
 import org.vaadin.addons.matthew.fliplayout.FlipLayout;
 import org.vaadin.addons.matthew.fliplayout.FlipLayoutVariant;
+import org.vaadin.addons.taefi.component.ToggleButtonGroup;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.card.Card;
@@ -18,7 +21,7 @@ import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.streams.DownloadHandler;
 
 import static org.vaadin.addons.matthew.fliplayout.FlipLayout.Direction.DOWN;
 import static org.vaadin.addons.matthew.fliplayout.FlipLayout.Direction.LEFT;
@@ -37,9 +40,8 @@ public class DemoView extends VerticalLayout {
         frontCard.addThemeVariants(CardVariant.LUMO_COVER_MEDIA);
         frontCard.setWidth("400px");
         frontCard.setHeight("300px");
-        StreamResource imageResource = new StreamResource("lapland.avif",
-                () -> getClass().getResourceAsStream("/images/lapland.avif"));
-        Image image = new Image(imageResource, "Lapland");
+        Image image = new Image(DownloadHandler.forClassResource(
+                DemoView.class, "/images/lapland.avif"), "Lapland");
         frontCard.setMedia(image);
         frontCard.setTitle(new Div("Lapland"));
 
@@ -104,7 +106,7 @@ public class DemoView extends VerticalLayout {
         add(flipLayout2);
 
         add(new H3("Flip listener"));
-        add(new Span("Click on the card to flip the layout."));
+        add(new Span("Click on the toggle button to flip the layout."));
 
         FlipLayout flipLayout3 = new FlipLayout();
         flipLayout3.addThemeVariants(FlipLayoutVariant.FAST);
@@ -112,9 +114,8 @@ public class DemoView extends VerticalLayout {
         card1.addThemeVariants(CardVariant.LUMO_COVER_MEDIA);
         card1.setWidth("400px");
         card1.setHeight("300px");
-        StreamResource laplandResource = new StreamResource("lapland.avif",
-                () -> getClass().getResourceAsStream("/images/lapland.avif"));
-        Image laplandImage = new Image(laplandResource, "Lapland");
+        Image laplandImage = new Image(DownloadHandler.forClassResource(
+                DemoView.class, "/images/lapland.avif"), "Lapland");
         card1.setMedia(laplandImage);
         card1.setTitle(new Div("Lapland"));
 
@@ -122,9 +123,8 @@ public class DemoView extends VerticalLayout {
         card2.addThemeVariants(CardVariant.LUMO_COVER_MEDIA);
         card2.setWidth("400px");
         card2.setHeight("300px");
-        StreamResource earthResource = new StreamResource("earth.avif",
-                () -> getClass().getResourceAsStream("/images/earth.avif"));
-        Image earthImage = new Image(earthResource, "Earth");
+        Image earthImage = new Image(DownloadHandler.forClassResource(
+                DemoView.class, "/images/earth.avif"), "Earth");
         card2.setMedia(earthImage);
         card2.setTitle(new Div("Earth"));
 
@@ -132,9 +132,8 @@ public class DemoView extends VerticalLayout {
         card3.addThemeVariants(CardVariant.LUMO_COVER_MEDIA);
         card3.setWidth("400px");
         card3.setHeight("300px");
-        StreamResource reindeerResource = new StreamResource("reindeer.avif",
-                () -> getClass().getResourceAsStream("/images/reindeer.avif"));
-        Image reindeerImage = new Image(reindeerResource, "Reindeer");
+        Image reindeerImage = new Image(DownloadHandler.forClassResource(
+                DemoView.class, "/images/reindeer.avif"), "Reindeer");
         card3.setMedia(reindeerImage);
         card3.setTitle(new Div("Reindeer"));
 
@@ -142,12 +141,12 @@ public class DemoView extends VerticalLayout {
         card4.addThemeVariants(CardVariant.LUMO_COVER_MEDIA);
         card4.setWidth("400px");
         card4.setHeight("300px");
-        StreamResource starrySkyResource = new StreamResource("starry-sky.avif",
-                () -> getClass().getResourceAsStream("/images/starry-sky.avif"));
-        Image starrySkyImage = new Image(starrySkyResource, "Starry Sky");
+        Image starrySkyImage = new Image(DownloadHandler.forClassResource(
+                DemoView.class, "/images/starry-sky.avif"), "Starry Sky");
         card4.setMedia(starrySkyImage);
         card4.setTitle(new Div("Starry Sky"));
 
+        Random random = new Random();
         flipLayout3.setFrontComponent(card1);
         flipLayout3.addFlipListener(event -> {
             Card[] cards = new Card[] { card1, card2, card3, card4 };
@@ -156,7 +155,7 @@ public class DemoView extends VerticalLayout {
                 Card currentFront = (Card) flipLayout3.getFrontComponent();
                 Card randomCard;
                 do {
-                    int randomIndex = (int) (Math.random() * cards.length);
+                    int randomIndex = random.nextInt(cards.length);
                     randomCard = cards[randomIndex];
                 } while (randomCard == currentFront);
                 flipLayout3.setBackComponent(randomCard);
@@ -165,14 +164,25 @@ public class DemoView extends VerticalLayout {
                 Card currentBack = (Card) flipLayout3.getBackComponent();
                 Card randomCard;
                 do {
-                    int randomIndex = (int) (Math.random() * cards.length);
+                    int randomIndex = random.nextInt(cards.length);
                     randomCard = cards[randomIndex];
                 } while (randomCard == currentBack);
                 flipLayout3.setFrontComponent(randomCard);
             }
         });
-        flipLayout3.addClickListener(event -> flipLayout3.flip());
-        add(flipLayout3);
+
+        ToggleButtonGroup<Boolean> toggle = new ToggleButtonGroup<>();
+        toggle.setItems(false, true);
+        toggle.setValue(false);
+        toggle.setToggleable(false);
+        toggle.setItemLabelGenerator(value -> Boolean.FALSE.equals(value) ? "Front" : "Back");
+        toggle.addValueChangeListener(event ->
+                flipLayout3.setFlipped(toggle.getValue()));
+
+        VerticalLayout example3 = new VerticalLayout(toggle, flipLayout3);
+        example3.setWidth("fit-content");
+        example3.setAlignItems(Alignment.CENTER);
+        add(example3);
     }
 
 }
